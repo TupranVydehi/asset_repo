@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>gamer</title>
+ <style>
+ canvas {
+       background:black;
+        border: 1px solid;
+    }
+ .button {
+  background-color: #ffcc66; 
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  display: inline-block;
+  font-size: 16px;
+  
+  cursor: pointer;
+}
+    </style>
+    </head>
+<body>
+<button type="button" onclick="drawLevel1()" class="button">Level 1</button>
+<button type="button" onclick="drawLevel2()" class="button">Level 2</button> 
+<p>
+    
+    
+    
+</p>    
+    
+<canvas id="Game" width="600" height="700"></canvas>
+   
+    
+    <script type="text/javascript">
+        var cnv = document.getElementById("Game");
+        var ctx = cnv.getContext("2d");
+
+        const gamewidth = 600;
+        const gameheight = 700;
+        var dx=1;
+        var dy=-2;
+        ctx.font="50px Arial";
+        ctx.fillStyle="gold";
+        ctx.fillText("Welcome to the Game",50,gameheight/2)
+  
+                
+//paddle       
+        var padwid = 100, padhei = 15, padx = (gamewidth - padwid) / 2, pady = gameheight - padhei - 10;
+        function drawPaddle()
+        {
+            ctx.beginPath();
+            ctx.fillStyle="#ff9999";
+            ctx.fillRect(padx,pady,padwid,padhei);
+            ctx.fill();
+            ctx.closePath();
+            
+        }
+        var right=false,left=false,padDx=8;
+        
+        function keyDownHandle(event)
+        {
+         if(event.keyCode == 39) 
+          {right=true;}
+         else if(event.keyCode == 37)
+          {left=true; }
+        }
+        
+        function keyUpHandle(event)
+        {
+         if(event.keyCode == 39) 
+          {right=false;}
+         else if(event.keyCode == 37)
+          {left=false;}
+        }
+        function paddlemovement(padDx)
+        {
+         if(right)
+            {padx+=padDx;}
+         if(left)
+             {padx-=padDx;}
+         if(padx<=0)
+             {padx=padx+padDx;}
+         if(padx+padwid>=gamewidth)
+             {padx=padx-padDx;}
+        }
+       
+//ball
+        var ballR=12,ballx=gamewidth/2,bally=gameheight-37;
+        function drawBall()
+        {
+            ctx.beginPath();
+            ctx.arc(ballx,bally,ballR, 0, 2 * Math.PI);
+            ctx.fillStyle="#2eb8b8";
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
+         }
+        function moveBall(multy)
+        {
+           ballx+=multy*dx;
+           bally+=multy*dy;    
+        }
+//bricks
+        
+        var brickw=70;
+        var brickh=20;
+        var brickPadding=20;
+        var brickOffsetLeft=35;
+        var brickOffsetTop=50;
+        var bricks=[];
+        var brickColumnCount=6;
+        var brickRowCount=6;
+        var c;
+        var r;
+        
+        for(c=0;c<brickColumnCount;c++)
+           {
+               for(r=0;r<brickRowCount;r++)
+                {
+                  bricks.push({
+                      x:(c*(brickw+brickPadding))+brickOffsetLeft,
+                      y:(r*(brickh+brickPadding))+brickOffsetTop,
+                      status:1
+                  });
+                }
+ 
+           }   
+        
+       function drawBricks()
+        {            
+            bricks.forEach(function(br)
+                 { 
+                    if(!br.status) return; 
+                     
+                   ctx.beginPath();                    
+                   ctx.rect(br.x,br.y,brickw,brickh);
+                   ctx.fillStyle="#ff9999";
+                   ctx.fill();
+                   ctx.closePath();
+ 
+               });
+        }
+        var count=36;
+        function allBricks()
+        {
+            if(count==0)
+                return true;
+            else
+                return false;
+        }
+    function collisionmeth()
+        {
+            bricks.forEach(function(br)
+            {            
+                if(!br.status) return;
+            
+                var bricol = ((ballx+ballR) >= br.x) && ((ballx-ballR) <= (br.x+brickw));
+                var brirow = ((bally+ballR) >= br.y) && ((bally-ballR) <= (br.y+brickh));
+                
+                if(bricol && brirow)
+                  {
+                     dy=-dy;
+                     br.status=0;
+                     count--;
+                  }
+            });
+            
+     if((ballx+ballR)>=gamewidth || (ballx-ballR)<=0)
+         {dx=-dx;}
+     if((bally-ballR)<0 || ((bally+ballR >pady) && (ballx+ballR>padx && ballx-ballR<padwid+padx)))
+         {dy =-dy;}
+    if((ballx+ballR<=padx || ballx-ballR>=padwid+padx) && (bally-(2*ballR)>=pady))
+          {
+            ctx.clearRect(0,0,gamewidth,gameheight);  
+            ctx.font="50px Arial" 
+            ctx.fillStyle="red";
+            for(var i=0;i<100000;i++)  
+            ctx.fillText("Level Failed",200,gameheight/2);   
+            document.location.reload();  
+          }
+      else if(allBricks())
+         {
+            ctx.clearRect(0,0,gamewidth,gameheight);   
+            ctx.font="50px Arial" 
+            ctx.fillStyle="gold";  
+            ctx.textAlign="center";
+            for(var i=0;i<100000;i++)
+            ctx.fillText("Congratulations!!!",gamewidth/2,gameheight/2);
+            document.location.reload(); 
+         }         
+     
+        }
+        
+    function drawLevel1()
+     { 
+        ctx.clearRect(0,0,gamewidth,gameheight);
+        drawPaddle();
+        drawBall();
+        drawBricks();
+        moveBall(1);   
+        collisionmeth();
+        document.addEventListener('keydown',keyDownHandle,false);
+        document.addEventListener('keyup',keyUpHandle,false); 
+        paddlemovement(5);
+        requestAnimationFrame(drawLevel1);
+            
+     }
+        function drawLevel2()
+     {
+         
+        ctx.clearRect(0,0,gamewidth,gameheight);
+        drawPaddle();
+        drawBall();
+        drawBricks();
+        moveBall(2);   
+        collisionmeth();
+        document.addEventListener('keydown',keyDownHandle,false);
+        document.addEventListener('keyup',keyUpHandle,false); 
+        paddlemovement(7);
+        requestAnimationFrame(drawLevel2);
+            
+     }
+                    
+    </script>
+</body>
+</html>
